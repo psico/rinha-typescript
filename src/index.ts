@@ -1,5 +1,5 @@
 import express from 'express';
-import { count, insertPerson } from './database';
+import { count, findById, findByTerm, insertPerson } from './database';
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
@@ -27,17 +27,30 @@ app.post('/pessoas', (request, response) => {
 });
 
 app.get('/pessoas/:id', (request, response) => {
+  findById(request.params.id).then((queryResult) => {
+    
+    const [result] = queryResult.rows;
+    if (!result) {
+        return response.status(404).end();
+    }
+    response.json(result).end();
+  }).catch(() => {
+    response.status(404).end();
+  })
 
-    return response.send({
-      message: `pessoas com params`,
-    });
-  });
+});
 
 app.get('/pessoas', (request, response) => {
+  if (!request.query['t']) {
+    return response.status(400).end();
+  };
 
-  return response.send({
-    message: `pessoas`,
-  });
+  findByTerm(request.query.t).then((queryResults) => {
+    response.json(queryResults.rows).end()
+  }).catch(() => {
+    response.status(404).end();
+  })
+
 });
 
 app.get('/contagem-pessoas', (request, response) => {

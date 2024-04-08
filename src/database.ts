@@ -63,3 +63,37 @@ export const insertPerson = async (id: any, { apelido, nome, nascimento, stack }
 export const count = async () => {
     return pool.query(`SELECT COUNT(1) FROM pessoas`);
 }
+
+export const findById = async (id: any) => {
+    const query = `
+        SELECT
+            id,
+            apelido,
+            nome,
+            to_char(nascimento, 'YYYY-MM-DD') as nascimento,
+            stack
+        FROM
+            pessoas
+        WHERE "id" = $1;
+    `;
+
+    return pool.query(query, [id]);
+}
+
+export const findByTerm = async (term: any) => {
+    const query = `
+        SELECT
+            id,
+            apelido,
+            nome,
+            to_char(nascimento, 'YYYY-MM-DD') as nascimento,
+            stack
+        FROM
+            pessoas
+        WHERE
+            (apelido || nome || stack) ILIKE $1
+        LIMIT 50
+    `;
+
+    return pool.query(query, [`%${term}%`])
+}
