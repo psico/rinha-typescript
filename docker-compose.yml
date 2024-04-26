@@ -11,30 +11,32 @@ services:
       NODE_ENV: prodution
       CLUSTER: true
       CLUSTER_WORKERS: 5
+      API_PORT: 3000
+    depends_on:
+      - postgres
+    ulimits:
+      nproc: 1000000
+      nofile:
+        soft: 1000000
+        hard: 1000000
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: '0.5GB'
+          cpus: "0.5"
+          memory: "0.6GB"
 
   api2: # API - Instância 01
     <<: *api1
     hostname: api2
-
-  nginx: # Load Balancer
-    image: nginx:latest
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - api1
-      - api2
-    ports:
-      - "3000:3000"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: '0.5GB'
+    environment:
+      DB_URL: "postgres://postgres:12345678@postgres:5432/postgres"
+      DB_POOL: 35
+      PINO_LOG_LEVEL: "debug"
+      REQ_TIMEOUT: "2000"
+      NODE_ENV: prodution
+      CLUSTER: true
+      CLUSTER_WORKERS: 5
+      API_PORT: 3001
 
   postgres: # Banco de dados
     image: postgres
@@ -50,9 +52,24 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-      start_period: 10s      
+      start_period: 10s
     deploy:
       resources:
         limits:
-          cpus: '0.75'
-          memory: '1.5GB'
+          cpus: "0.4"
+          memory: "1.5GB"
+
+  nginx: # Load Balancer
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api1
+      - api2
+    ports:
+      - "9999:9999"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: "0.3GB"

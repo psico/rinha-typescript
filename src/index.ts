@@ -1,6 +1,8 @@
 import express from 'express';
 import { count, findById, findByTerm, insertPerson } from './database';
 const { v4: uuidv4 } = require('uuid');
+const cluster = require('cluster');
+const process = require('process');
 
 const app = express();
 app.use(express.json());
@@ -68,4 +70,33 @@ app.get('/contagem-pessoas', (request, response) => {
 });
 
 
-app.listen(3000, () => console.log('Listening 3000'));
+// app.listen(process.env.API_PORT, () => console.log(`Listening ${process.env.API_PORT}`));
+
+const numForks = Number(process.env.CLUSTER_WORKERS) || 1;
+const TIMEOUT = Number(process.env.REQ_TIMEOUT) || 5000;
+
+if(cluster.isPrimary && process.env.CLUSTER === 'true'){
+    console.info(`index.js: Primary ${process.pid} is running`);
+
+    for (let i = 0; i < numForks; i++) {
+      cluster.fork();
+    }
+
+    cluster.on('exit', (worker: any, code: any, signal: any) => {
+        console.info(`index.js: worker ${worker.process.pid} died: code ${code} signal ${signal}`);
+    });
+} else {
+    const serverApp = app.listen(process.env.API_PORT, () => {
+        console.info(`index.js:${process.pid}:Listening on ${process.env.API_PORT}`);
+    });
+
+    if (process.env.USE_TIMEOUT === 'true') {
+        serverApp.setTimeout(TIMEOUT)
+        console.info(`Starting with timeout as ${TIMEOUT}ms`)
+
+        serverApp.on('timeout', (socket) => {
+            console.warn(`Timing out connection`);
+            socket.end();
+        })
+    }
+}

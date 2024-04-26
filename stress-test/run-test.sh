@@ -12,7 +12,7 @@ sh $GATLING_BIN_DIR/gatling.sh -rm local -s RinhaBackendSimulation \
     -rd "DESCRICAO" \
     -rf $WORKSPACE/user-files/results \
     -sf $WORKSPACE/user-files/simulations \
-    -rsf $WORKSPACE/user-files/resources \
+    -rsf $WORKSPACE/user-files/resources
 
 sleep 3
 

@@ -118,3 +118,6 @@ dist
 .pnp.*
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Node
+
+stress-test/user-files/results
+src/rinha-typescript.code-workspace
